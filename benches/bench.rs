@@ -76,6 +76,11 @@ fn bench_dispatcher(c: &mut Criterion) {
             i.as_slice(),
             |b, i| b.iter(|| standard_indirect_xor(i)),
         );
+        group.bench_with_input(
+            BenchmarkId::new("No dispatching", len),
+            i.as_slice(),
+            |b, i| b.iter(|| xor(i)),
+        );
     }
 }
 

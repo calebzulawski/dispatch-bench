@@ -18,17 +18,22 @@ impl<const INDIRECT: bool> Dispatcher<INDIRECT> {
         f()
     }
 
+    #[cold]
+    fn detect() -> usize {
+        if is_x86_feature_detected!("avx2") & is_x86_feature_detected!("avx") {
+            2
+        } else if is_x86_feature_detected!("avx") {
+            1
+        } else {
+            0
+        }
+    }
+
     pub fn dispatch<Output>(f: impl FnOnce() -> Output) -> Output {
         static SELECTED: AtomicUsize = AtomicUsize::new(usize::MAX);
         let selected = SELECTED.load(Ordering::Relaxed);
         let selected = if selected == usize::MAX {
-            let selected = if is_x86_feature_detected!("avx2") & is_x86_feature_detected!("avx") {
-                2
-            } else if is_x86_feature_detected!("avx") {
-                1
-            } else {
-                0
-            };
+            let selected = Self::detect();
             SELECTED.store(selected, Ordering::Relaxed);
             selected
         } else {
